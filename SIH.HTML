@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Classroom & Timetable Scheduler</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #444;
+            /* Default background for dashboards */
+            background: #f0f4f7;
+        }
+
+        /* Background for sign-in, registration, and forgot password pages */
+        .signin-container, .forgot-password-container, .registration-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #a00000 0%, #0a0a0a 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Sign-in Card Styles */
+        .signin-card, .form-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .signin-card:hover, .form-card:hover {
+            transform: perspective(1000px) rotateY(3deg) rotateX(1deg);
+        }
+
+        .signin-card::before, .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translateZ(-20px) scale(0.95);
+            filter: blur(2px);
+            z-index: -1;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .signin-card:hover::before, .form-card:hover::before {
+            transform: translateZ(-30px) scale(0.98);
+        }
+
+        /* Responsive Logo Text */
+        .logo, .logo-text {
+            font-size: clamp(1.5rem, 6vw, 2.5rem);
+            font-weight: bold;
+            color: #c90000;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            color: #777;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .signin-form, .form-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            background: #fff;
+            color: #444;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input::placeholder {
+            color: #999;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #c90000;
+            box-shadow: 0 0 0 3px rgba(201, 0, 0, 0.1);
+        }
+
+        .form-group select option {
+            background: #fff;
+            color: #444;
+        }
+
+        .signin-btn, .submit-btn {
+            background: linear-gradient(135deg, #c90000, #a00000);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .signin-btn:hover, .submit-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(201, 0, 0, 0.3);
+        }
+
+        .link-options {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        .link-options a {
+            color: #c90000;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .link-options a:hover {
+            color: #a00000;
+            text-decoration: underline;
+        }
+
+        /* Dashboard Styles - General */
+        .dashboard {
+            display: none;
+            min-height: 100vh;
+            background: #f0f4f7;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #c90000, #a00000);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(201, 0, 0, 0.4);
+        }
+
+        .user-details h1 {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 0.2rem;
+        }
+
+        .user-details p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .college-info {
+            text-align: center;
+        }
+
+        .college-info h2 {
+            font-size: 1.1rem;
+            color: #c90000;
+            margin-bottom: 0.2rem;
+        }
+
+        .college-info p {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #b52b39;
+        }
+
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #c90000, #a00000);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section, .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            border: 1px solid #e0e0e0;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .section:hover, .card:hover {
+            transform: perspective(1000px) rotateY(-1deg) rotateX(1deg);
+        }
+
+        .section::before, .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.03);
+            transform: translateZ(-15px) scale(0.98);
+            filter: blur(2px);
+            z-index: -1;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .section:hover::before, .card:hover::before {
+            transform: translateZ(-25px) scale(0.99);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #c90000, #a00000);
+            color: white;
+            padding: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .filters select {
+            background: rgba(255, 255, 255, 0.8);
+            color: #444;
+            border: 1px solid #ccc;
+        }
+
+        .action-btn {
+            background: #eee;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+
+        .table-container th, .timetable th {
+            background: #f0f0f0;
+            color: #c90000;
+        }
+
+        .table-container td, .timetable td {
+            background: white;
+            border-color: #e0e0e0;
+        }
+
+        .table-container tr:hover, .timetable td:hover {
+            background: #f8f8f8;
+        }
+
+        /* Timetable Cell Colors */
+        .subject-cell {
+            background: #d4edda !important; /* Lighter green */
+            color: #155724 !important;
+            border: 1px solid #c3e6cb !important;
+        }
+
+        .elective-cell {
+            background: #fff3cd !important; /* Lighter yellow */
+            color: #856404 !important;
+            border: 1px solid #ffeeba !important;
+        }
+
+        .lab-cell {
+            background: #f8d7da !important; /* Lighter red */
+            color: #721c24 !important;
+            border: 1px solid #f5c6cb !important;
+        }
+
+        .lunch-cell {
+            background: #ffe4a7 !important; /* Lighter orange */
+            color: #b07d0b !important;
+            font-weight: bold;
+            border: 1px solid #ffd880 !important;
+        }
+
+        /* Other element color overrides for light theme */
+        .current-class {
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #444;
+            border-left: 4px solid #c90000;
+        }
+
+        .current-class h3 {
+            color: #c90000;
+        }
+
+        .class-info {
+            background: #f9f9f9;
+            color: #444;
+            border: 1px solid #eee;
+        }
+
+        .class-info strong {
+            color: #c90000;
+        }
+
+        .stats-grid .stat-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #444;
+        }
+
+        .stat-number {
+            color: #c90000;
+        }
+
+        .attendance-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #444;
+        }
+
+        .attendance-percentage.good { color: #28a745; }
+        .attendance-percentage.warning { color: #ffc107; }
+        .attendance-percentage.danger { color: #dc3545; }
+
+        .subject-item {
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .subject-name, .attendance-stats strong {
+            color: #444;
+        }
+
+        .subject-code {
+            color: #777;
+        }
+
+        /* New styles for messaging feature */
+        .messages-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .message-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            align-items: flex-start;
+        }
+        
+        .message-item:last-child {
+            border-bottom: none;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            background: #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #777;
+            flex-shrink: 0;
+        }
+        
+        .message-avatar.faculty {
+            background: linear-gradient(135deg, #c90000, #a00000);
+            color: white;
+        }
+
+        .message-content {
+            flex-grow: 1;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .message-text {
+            font-size: 0.9rem;
+            color: #555;
+        }
+        
+        /* Responsive Styles for Mobile */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            .class-details, .stats-grid, .attendance-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filters .filter-select, .filters .action-btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+
+            .table-container, .timetable {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .table-container table, .timetable table {
+                min-width: 600px;
+            }
+            
+            /* Smaller padding for the card on mobile for better fit */
+            .signin-card, .form-card {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="signin-page" class="signin-container">
+        <div class="signin-card">
+            <div class="logo">📚 SmartScheduler</div>
+            <p class="tagline">Smart Classroom & Timetable Management System</p>
+            
+            <form class="signin-form" onsubmit="handleSignin(event)">
+                <div class="form-group">
+                    <label for="userType">Login As</label>
+                    <select id="userType" name="userType" required>
+                        <option value="student">Student</option>
+                        <option value="faculty">Faculty</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="institution">Institution Code</label>
+                    <input type="text" id="institution" name="institution" placeholder="e.g., BITS001, IIT-D, etc." required>
+                </div>
+                <div class="form-group">
+                    <label for="username">Student ID / Faculty ID</label>
+                    <input type="text" id="username" name="username" placeholder="e.g., 2021A7PS001 or FAC001" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="signin-btn">Sign In</button>
+            </form>
+            
+            <div class="link-options">
+                <a href="#" onclick="showForgotPasswordPage(event)">Forgot Password?</a>
+                <a href="#" onclick="showRegistrationPage(event)">Register Here</a>
+            </div>
+        </div>
+    </div>
+    
+    <div id="forgot-password-page" class="forgot-password-container" style="display: none;">
+        <div class="form-card">
+            <h1 class="logo-text">Forgot Password?</h1>
+            <p class="tagline">Enter your email to receive a password reset link.</p>
+            <form class="form-content" onsubmit="submitForgotPassword(event)">
+                <div class="form-group">
+                    <label for="forgot-email">Email Address</label>
+                    <input type="email" id="forgot-email" name="forgot-email" placeholder="Enter your email" required>
+                </div>
+                <button type="submit" class="submit-btn">Reset Password</button>
+            </form>
+            <div class="link-options" style="justify-content: center;">
+                <a href="#" onclick="goBackToSignin(event)">Back to Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="registration-page" class="registration-container" style="display: none;">
+        <div class="form-card">
+            <h1 class="logo-text">Register Here</h1>
+            <p class="tagline">Create your new SmartScheduler account.</p>
+            <form class="form-content" onsubmit="submitRegistration(event)">
+                <div class="form-group">
+                    <label for="reg-name">Full Name</label>
+                    <input type="text" id="reg-name" name="reg-name" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Email Address</label>
+                    <input type="email" id="reg-email" name="reg-email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Password</label>
+                    <input type="password" id="reg-password" name="reg-password" placeholder="Create a password" required>
+                </div>
+                <button type="submit" class="submit-btn">Register</button>
+            </form>
+            <div class="link-options" style="justify-content: center;">
+                <a href="#" onclick="goBackToSignin(event)">Back to Sign In</a>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="student-dashboard" class="dashboard">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="user-info">
+                        <div class="user-avatar" id="student-avatar">A</div>
+                        <div class="user-details">
+                            <h1 id="student-name">Aarav Sharma</h1>
+                            <p id="student-id">2021A7PS001 • Computer Science</p>
+                        </div>
+                    </div>
+                    <div class="college-info">
+                        <h2 id="student-college-name">BITS Pilani</h2>
+                        <p id="student-college-location">Pilani, Rajasthan</p>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab(event, 'timetable', 'student')">My Timetable</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'attendance', 'student')">My Attendance</button>
+                </div>
+                <div id="student-timetable-tab" class="tab-content active section">
+                    <div class="section-header">
+                        <h2>📚 Current Class</h2>
+                        <p>Your current class and details</p>
+                    </div>
+                    <div class="class-details-container" style="padding: 1.5rem;">
+                        <div class="class-details">
+                            <div class="class-info card">
+                                <strong>Subject:</strong>
+                                <span id="current-subject">Data Structures</span>
+                            </div>
+                            <div class="class-info card">
+                                <strong>Time:</strong>
+                                <span id="current-time">9:00 AM - 10:00 AM</span>
+                            </div>
+                            <div class="class-info card">
+                                <strong>Room:</strong>
+                                <span id="current-room">Room 101</span>
+                            </div>
+                            <div class="class-info card">
+                                <strong>Faculty:</strong>
+                                <span id="current-faculty">Dr. Rajesh Kumar</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section" style="margin: 0; border: none; box-shadow: none;">
+                        <div class="section-header">
+                            <h2>📅 Weekly Timetable</h2>
+                            <p>Your personalized class schedule</p>
+                        </div>
+                        <div class="timetable">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Monday</th>
+                                        <th>Tuesday</th>
+                                        <th>Wednesday</th>
+                                        <th>Thursday</th>
+                                        <th>Friday</th>
+                                        <th>Saturday</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>9:00 AM</strong></td>
+                                        <td class="subject-cell">Data Structures<br><small>CS-301 | Room 101</small></td>
+                                        <td class="subject-cell">Database Systems<br><small>CS-302 | Room 102</small></td>
+                                        <td class="lab-cell">Programming Lab<br><small>CS-L301 | Lab 1</small></td>
+                                        <td class="subject-cell">Algorithms<br><small>CS-303 | Room 103</small></td>
+                                        <td class="elective-cell">ML Fundamentals<br><small>CS-E301 | Room 104</small></td>
+                                        <td class="subject-cell">Software Eng.<br><small>CS-304 | Room 101</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>10:00 AM</strong></td>
+                                        <td class="elective-cell">Web Development<br><small>CS-E302 | Room 105</small></td>
+                                        <td class="subject-cell">Computer Networks<br><small>CS-305 | Room 101</small></td>
+                                        <td class="subject-cell">Operating Systems<br><small>CS-306 | Room 102</small></td>
+                                        <td class="lab-cell">Database Lab<br><small>CS-L302 | Lab 2</small></td>
+                                        <td class="subject-cell">Theory of Computation<br><small>CS-307 | Room 103</small></td>
+                                        <td style="background: #f0f4f7; color: #888;">Free Period</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>11:00 AM</strong></td>
+                                        <td class="subject-cell">Discrete Mathematics<br><small>MA-201 | Room 201</small></td>
+                                        <td class="elective-cell">Cyber Security<br><small>CS-E303 | Room 104</small></td>
+                                        <td class="subject-cell">Compiler Design<br><small>CS-308 | Room 105</small></td>
+                                        <td class="subject-cell">Computer Graphics<br><small>CS-309 | Room 106</small></td>
+                                        <td class="lab-cell">Network Lab<br><small>CS-L303 | Lab 3</small></td>
+                                        <td class="subject-cell">Project Work<br><small>CS-401 | Room 107</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>12:00 PM</strong></td>
+                                        <td colspan="6" class="lunch-cell">LUNCH BREAK</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>1:00 PM</strong></td>
+                                        <td class="elective-cell">ML Fundamentals<br><small>CS-E301 | Room 104</small></td>
+                                        <td class="lab-cell">Network Lab<br><small>CS-L303 | Lab 3</small></td>
+                                        <td class="subject-cell">Computer Networks<br><small>CS-305 | Room 101</small></td>
+                                        <td class="subject-cell">Operating Systems<br><small>CS-306 | Room 102</small></td>
+                                        <td class="elective-cell">Web Development<br><small>CS-E302 | Room 105</small></td>
+                                        <td class="subject-cell">Project Work<br><small>CS-401 | Room 107</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>2:00 PM</strong></td>
+                                        <td style="background: #f0f4f7; color: #888;">Free Period</td>
+                                        <td class="subject-cell">Software Eng.<br><small>CS-304 | Room 101</small></td>
+                                        <td class="subject-cell">Discrete Mathematics<br><small>MA-201 | Room 201</small></td>
+                                        <td class="lab-cell">Programming Lab<br><small>CS-L301 | Lab 1</small></td>
+                                        <td class="subject-cell">Algorithms<br><small>CS-303 | Room 103</small></td>
+                                        <td style="background: #f0f4f7; color: #888;">Free Period</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="student-attendance-tab" class="tab-content section">
+                    <div class="section-header">
+                        <h2>📊 My Attendance by Subject</h2>
+                        <p>Track your attendance for each subject</p>
+                        <div class="filters">
+                            <select class="filter-select" id="student-subject-filter" onchange="filterStudentAttendance()">
+                                <option value="all">All Subjects</option>
+                                <option value="cs-301">CS-301 Data Structures</option>
+                                <option value="cs-302">CS-302 Database Systems</option>
+                                <option value="cs-303">CS-303 Algorithms</option>
+                                <option value="cs-304">CS-304 Software Engineering</option>
+                                <option value="ma-201">MA-201 Discrete Mathematics</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="padding: 1.5rem;">
+                        <div class="attendance-summary">
+                            <div class="attendance-card card">
+                                <div class="attendance-percentage good" id="student-overall">94%</div>
+                                <div class="attendance-label">Overall Attendance</div>
+                            </div>
+                            <div class="attendance-card card">
+                                <div class="attendance-percentage good" id="student-present">28</div>
+                                <div class="attendance-label">Classes Attended</div>
+                            </div>
+                            <div class="attendance-card card">
+                                <div class="attendance-percentage danger" id="student-absent">2</div>
+                                <div class="attendance-label">Classes Missed</div>
+                            </div>
+                            <div class="attendance-card card">
+                                <div class="attendance-percentage warning">75%</div>
+                                <div class="attendance-label">Minimum Required</div>
+                            </div>
+                        </div>
+
+                        <div class="subject-item card">
+                            <div class="subject-details">
+                                <div class="subject-name">Data Structures</div>
+                                <div class="subject-code">CS-301</div>
+                            </div>
+                            <div class="attendance-stats">
+                                <strong style="color: #10b981;">96%</strong>
+                                <div class="percentage-bar">
+                                    <div class="percentage-fill good" style="width: 96%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subject-item card">
+                            <div class="subject-details">
+                                <div class="subject-name">Database Systems</div>
+                                <div class="subject-code">CS-302</div>
+                            </div>
+                            <div class="attendance-stats">
+                                <strong style="color: #10b981;">92%</strong>
+                                <div class="percentage-bar">
+                                    <div class="percentage-fill good" style="width: 92%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subject-item card">
+                            <div class="subject-details">
+                                <div class="subject-name">Algorithms</div>
+                                <div class="subject-code">CS-303</div>
+                            </div>
+                            <div class="attendance-stats">
+                                <strong style="color: #f59e0b;">85%</strong>
+                                <div class="percentage-bar">
+                                    <div class="percentage-fill warning" style="width: 85%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subject-item card">
+                            <div class="subject-details">
+                                <div class="subject-name">Software Engineering</div>
+                                <div class="subject-code">CS-304</div>
+                            </div>
+                            <div class="attendance-stats">
+                                <strong style="color: #10b981;">98%</strong>
+                                <div class="percentage-bar">
+                                    <div class="percentage-fill good" style="width: 98%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subject-item card">
+                            <div class="subject-details">
+                                <div class="subject-name">Discrete Mathematics</div>
+                                <div class="subject-code">MA-201</div>
+                            </div>
+                            <div class="attendance-stats">
+                                <strong style="color: #f59e0b;">78%</strong>
+                                <div class="percentage-bar">
+                                    <div class="percentage-fill warning" style="width: 78%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="student-messages-tab" class="tab-content section">
+                    <div class="section-header">
+                        <h2>💬 My Messages</h2>
+                        <p>Important announcements and messages from your faculty.</p>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <ul class="messages-list">
+                            <li class="message-item card">
+                                <div class="message-avatar faculty">DR</div>
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <div class="message-sender">Dr. Rajesh Kumar</div>
+                                        <div class="message-time">2 hours ago</div>
+                                    </div>
+                                    <div class="message-text">
+                                        Reminder: The deadline for the Data Structures assignment has been extended to Friday.
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="message-item card">
+                                <div class="message-avatar faculty">PS</div>
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <div class="message-sender">Prof. Sarah Johnson</div>
+                                        <div class="message-time">Yesterday</div>
+                                    </div>
+                                    <div class="message-text">
+                                        Hello everyone, our next class on Web Development will be a hands-on lab session. Please come prepared with your laptops.
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="message-item card">
+                                <div class="message-avatar faculty">AM</div>
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <div class="message-sender">Dr. Amit Patel</div>
+                                        <div class="message-time">2 days ago</div>
+                                    </div>
+                                    <div class="message-text">
+                                        The Discrete Mathematics notes for Chapter 3 are now available on the portal.
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="faculty-dashboard" class="dashboard">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="user-info">
+                        <div class="user-avatar" id="faculty-avatar">D</div>
+                        <div class="user-details">
+                            <h1 id="faculty-name">Dr. Rajesh Kumar</h1>
+                            <p id="faculty-dept">Computer Science Department</p>
+                        </div>
+                    </div>
+                    <div class="college-info">
+                        <h2 id="faculty-college-name">BITS Pilani</h2>
+                        <p id="faculty-college-location">Pilani, Rajasthan</p>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab(event, 'schedule', 'faculty')">My Schedule</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'attendance-mgmt', 'faculty')">Attendance Management</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'booking', 'faculty')">Classroom Booking</button>
+                </div>
+
+                <div id="faculty-schedule-tab" class="tab-content active section">
+                    <div class="section-header">
+                        <h2>📚 Current Class</h2>
+                        <p>Your current class and details</p>
+                    </div>
+                    <div class="class-details-container" style="padding: 1.5rem;">
+                        <div class="class-details">
+                            <div class="class-info card">
+                                <strong>Subject:</strong>
+                                <span id="faculty-current-subject">Data Structures</span>
+                            </div>
+                            <div class="class-info card">
+                                <strong>Time:</strong>
+                                <span id="faculty-current-time">9:00 AM - 10:00 AM</span>
+                            </div>
+                            <div class="class-info card">
+                                <strong>Room:</strong>
+                                <span id="faculty-current-room">Room 101</span>
+                            </div>
+                            <div class="class-info card">
+                                <strong>Students:</strong>
+                                <span id="faculty-current-students">45 enrolled</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section" style="margin: 0; border: none; box-shadow: none;">
+                        <div class="section-header">
+                            <h2>📅 Weekly Teaching Schedule</h2>
+                            <p>Your teaching timetable and class assignments</p>
+                        </div>
+                        <div class="timetable">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Monday</th>
+                                        <th>Tuesday</th>
+                                        <th>Wednesday</th>
+                                        <th>Thursday</th>
+                                        <th>Friday</th>
+                                        <th>Saturday</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>9:00 AM</strong></td>
+                                        <td class="subject-cell">Data Structures<br><small>CS-301 | Room 101 | 45 students</small></td>
+                                        <td class="subject-cell">Data Structures<br><small>CS-301 | Room 102 | 40 students</small></td>
+                                        <td style="background: #f0f4f7; color: #888;">Research Time</td>
+                                        <td class="subject-cell">Algorithms<br><small>CS-303 | Room 103 | 38 students</small></td>
+                                        <td style="background: #f0f4f7; color: #888;">Office Hours</td>
+                                        <td class="subject-cell">Software Eng.<br><small>CS-304 | Room 101 | 42 students</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>10:00 AM</strong></td>
+                                        <td style="background: #f0f4f7; color: #888;">Free Period</td>
+                                        <td class="lab-cell">DS Lab Session<br><small>CS-L301 | Lab 1 | 20 students</small></td>
+                                        <td class="subject-cell">Operating Systems<br><small>CS-306 | Room 102 | 35 students</small></td>
+                                        <td style="background: #f0f4f7; color: #888;">Faculty Meeting</td>
+                                        <td class="subject-cell">Theory of Computation<br><small>CS-307 | Room 103 | 32 students</small></td>
+                                        <td style="background: #f0f4f7; color: #888;">Free Period</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>11:00 AM</strong></td>
+                                        <td style="background: #f0f4f7; color: #888;">Research Time</td>
+                                        <td class="subject-cell">Advanced Algorithms<br><small>CS-401 | Room 104 | 28 students</small></td>
+                                        <td class="subject-cell">Compiler Design<br><small>CS-308 | Room 105</small></td>
+                                        <td class="subject-cell">Computer Graphics<br><small>CS-309 | Room 106</small></td>
+                                        <td style="background: #f0f4f7; color: #888;">Office Hours</td>
+                                        <td class="subject-cell">Project Guidance<br><small>CS-401 | Room 107 | 15 students</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>12:00 PM</strong></td>
+                                        <td colspan="6" class="lunch-cell">LUNCH BREAK</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>1:00 PM</strong></td>
+                                        <td class="elective-cell">Advanced Algorithms<br><small>CS-401 | Room 104 | 28 students</small></td>
+                                        <td class="lab-cell">Network Lab<br><small>CS-L303 | Lab 3</small></td>
+                                        <td style="background: #f0f4f7; color: #888;">Free Period</td>
+                                        <td style="background: #f0f4f7; color: #888;">Research Time</td>
+                                        <td class="subject-cell">Computer Graphics<br><small>CS-309 | Room 106</small></td>
+                                        <td class="subject-cell">Project Guidance<br><small>CS-401 | Room 107 | 15 students</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>2:00 PM</strong></td>
+                                        <td class="subject-cell">Discrete Mathematics<br><small>MA-201 | Room 201</small></td>
+                                        <td style="background: #f0f4f7; color: #888;">Free Period</td>
+                                        <td class="subject-cell">Software Eng.<br><small>CS-304 | Room 101 | 42 students</small></td>
+                                        <td class="subject-cell">Operating Systems<br><small>CS-306 | Room 102 | 35 students</small></td>
+                                        <td class="elective-cell">ML Fundamentals<br><small>CS-E301 | Room 104</small></td>
+                                        <td style="background: #f0f4f7; color: #888;">Faculty Meeting</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="faculty-attendance-mgmt-tab" class="tab-content section">
+                    <div class="section-header">
+                        <h2>📝 Attendance Management</h2>
+                        <p>Manage student attendance for your classes</p>
+                        <div class="filters">
+                            <select class="filter-select" id="faculty-class-filter" onchange="filterFacultyAttendance()">
+                                <option value="cs-301">CS-301 Data Structures</option>
+                                <option value="cs-303">CS-303 Algorithms</option>
+                                <option value="cs-304">CS-304 Software Engineering</option>
+                                <option value="cs-306">CS-306 Operating Systems</option>
+                                <option value="cs-307">CS-307 Theory of Computation</option>
+                            </select>
+                            <select class="filter-select" id="faculty-date-filter">
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="this-week">This Week</option>
+                            </select>
+                            <button class="action-btn" onclick="saveAttendance()">💾 Save Attendance</button>
+                            <button class="action-btn" onclick="generateReport()">📊 Generate Report</button>
+                        </div>
+                    </div>
+
+                    <div style="padding: 1.5rem;">
+                        <div class="stats-grid">
+                            <div class="stat-card card">
+                                <div class="stat-number" id="faculty-total-students">45</div>
+                                <div class="stat-label">Total Students</div>
+                            </div>
+                            <div class="stat-card card">
+                                <div class="stat-number" id="faculty-present-today">42</div>
+                                <div class="stat-label">Present Today</div>
+                            </div>
+                            <div class="stat-card card">
+                                <div class="stat-number" id="faculty-absent-today">3</div>
+                                <div class="stat-label">Absent Today</div>
+                            </div>
+                            <div class="stat-card card">
+                                <div class="stat-number" id="faculty-attendance-rate">93%</div>
+                                <div class="stat-label">Class Attendance Rate</div>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="attendance-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Student Name</th>
+                                        <th>Current Status</th>
+                                        <th>Attendance %</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>2021A7PS001</td>
+                                        <td>Aarav Sharma</td>
+                                        <td><span class="badge present">Present</span></td>
+                                        <td>96%</td>
+                                        <td>
+                                            <div class="attendance-controls">
+                                                <button class="attendance-btn btn-present" onclick="markAttendance('2021A7PS001', 'present')">P</button>
+                                                <button class="attendance-btn btn-absent" onclick="markAttendance('2021A7PS001', 'absent')">A</button>
+                                                <button class="attendance-btn btn-late" onclick="markAttendance('2021A7PS001', 'late')">L</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2021A7PS002</td>
+                                        <td>Priya Patel</td>
+                                        <td><span class="badge late">Late</span></td>
+                                        <td>89%</td>
+                                        <td>
+                                            <div class="attendance-controls">
+                                                <button class="attendance-btn btn-present" onclick="markAttendance('2021A7PS002', 'present')">P</button>
+                                                <button class="attendance-btn btn-absent" onclick="markAttendance('2021A7PS002', 'absent')">A</button>
+                                                <button class="attendance-btn btn-late" onclick="markAttendance('2021A7PS002', 'late')">L</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2021A7PS003</td>
+                                        <td>Rahul Singh</td>
+                                        <td><span class="badge absent">Absent</span></td>
+                                        <td>76%</td>
+                                        <td>
+                                            <div class="attendance-controls">
+                                                <button class="attendance-btn btn-present" onclick="markAttendance('2021A7PS003', 'present')">P</button>
+                                                <button class="attendance-btn btn-absent" onclick="markAttendance('2021A7PS003', 'absent')">A</button>
+                                                <button class="attendance-btn btn-late" onclick="markAttendance('2021A7PS003', 'late')">L</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2021A7PS004</td>
+                                        <td>Ananya Gupta</td>
+                                        <td><span class="badge present">Present</span></td>
+                                        <td>97%</td>
+                                        <td>
+                                            <div class="attendance-controls">
+                                                <button class="attendance-btn btn-present" onclick="markAttendance('2021A7PS004', 'present')">P</button>
+                                                <button class="attendance-btn btn-absent" onclick="markAttendance('2021A7PS004', 'absent')">A</button>
+                                                <button class="attendance-btn btn-late" onclick="markAttendance('2021A7PS004', 'late')">L</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2021A7PS005</td>
+                                        <td>Vikram Reddy</td>
+                                        <td><span class="badge present">Present</span></td>
+                                        <td>85%</td>
+                                        <td>
+                                            <div class="attendance-controls">
+                                                <button class="attendance-btn btn-present" onclick="markAttendance('2021A7PS005', 'present')">P</button>
+                                                <button class="attendance-btn btn-absent" onclick="markAttendance('2021A7PS005', 'absent')">A</button>
+                                                <button class="attendance-btn btn-late" onclick="markAttendance('2021A7PS005', 'late')">L</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2021A7PS006</td>
+                                        <td>Sneha Iyer</td>
+                                        <td><span class="badge present">Present</span></td>
+                                        <td>91%</td>
+                                        <td>
+                                            <div class="attendance-controls">
+                                                <button class="attendance-btn btn-present" onclick="markAttendance('2021A7PS006', 'present')">P</button>
+                                                <button class="attendance-btn btn-absent" onclick="markAttendance('2021A7PS006', 'absent')">A</button>
+                                                <button class="attendance-btn btn-late" onclick="markAttendance('2021A7PS006', 'late')">L</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="faculty-booking-tab" class="tab-content section">
+                    <div class="section-header">
+                        <h2>🗓️ Classroom Booking</h2>
+                        <p>Book a classroom for a new lecture, lab, or meeting.</p>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <form class="form-content" onsubmit="handleBooking(event)">
+                            <div class="form-group">
+                                <label for="booking-date">Date</label>
+                                <input type="date" id="booking-date" name="booking-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="booking-start-time">Start Time</label>
+                                <input type="time" id="booking-start-time" name="booking-start-time" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="booking-end-time">End Time</label>
+                                <input type="time" id="booking-end-time" name="booking-end-time" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="room-type">Room Type</label>
+                                <select id="room-type" name="room-type" required>
+                                    <option value="">Select Room Type</option>
+                                    <option value="lecture-hall">Lecture Hall</option>
+                                    <option value="lab">Computer Lab</option>
+                                    <option value="seminar-room">Seminar Room</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="submit-btn" style="margin-top: 1rem;">Book Classroom</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function handleSignin(event) {
+            event.preventDefault();
+            
+            const userType = document.getElementById('userType').value;
+            const institution = document.getElementById('institution').value;
+            const username = document.getElementById('username').value;
+            
+            if (userType === 'student') {
+                updateStudentInfo(institution, username);
+                document.getElementById('signin-page').style.display = 'none';
+                document.getElementById('student-dashboard').style.display = 'block';
+                updateCurrentClass();
+            } else if (userType === 'faculty') {
+                updateFacultyInfo(institution, username);
+                document.getElementById('signin-page').style.display = 'none';
+                document.getElementById('faculty-dashboard').style.display = 'block';
+                updateFacultyCurrentClass();
+            }
+        }
+        
+        function showForgotPasswordPage(event) {
+            event.preventDefault();
+            document.getElementById('signin-page').style.display = 'none';
+            document.getElementById('forgot-password-page').style.display = 'flex';
+        }
+        
+        function showRegistrationPage(event) {
+            event.preventDefault();
+            document.getElementById('signin-page').style.display = 'none';
+            document.getElementById('registration-page').style.display = 'flex';
+        }
+
+        function goBackToSignin(event) {
+            event.preventDefault();
+            document.getElementById('forgot-password-page').style.display = 'none';
+            document.getElementById('registration-page').style.display = 'none';
+            document.getElementById('signin-page').style.display = 'flex';
+        }
+        
+        function submitForgotPassword(event) {
+            event.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+            alert(`A password reset link has been sent to ${email}. Please check your inbox.`);
+            goBackToSignin(event);
+        }
+        
+        function submitRegistration(event) {
+            event.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            alert(`Account for ${name} has been created successfully! You can now sign in.`);
+            goBackToSignin(event);
+        }
+
+        function updateStudentInfo(institutionCode, studentId) {
+            const colleges = {
+                'BITS001': { name: 'BITS Pilani', location: 'Pilani, Rajasthan' },
+                'IIT-D': { name: 'IIT Delhi', location: 'New Delhi' },
+                'IISC': { name: 'Indian Institute of Science', location: 'Bangalore, Karnataka' },
+                'NIT-K': { name: 'NIT Kurukshetra', location: 'Kurukshetra, Haryana' },
+                'VIT': { name: 'Vellore Institute of Technology', location: 'Vellore, Tamil Nadu' }
+            };
+
+            const students = {
+                '2021A7PS001': 'Aarav Sharma',
+                '2021A7PS002': 'Priya Patel', 
+                '2021A7PS003': 'Rahul Singh',
+                '2021CS001': 'Ananya Gupta',
+                '2021CS002': 'Vikram Reddy'
+            };
+
+            const college = colleges[institutionCode.toUpperCase()] || { name: 'Sample University', location: 'Location' };
+            const studentName = students[studentId.toUpperCase()] || 'Student Name';
+
+            document.getElementById('student-college-name').textContent = college.name;
+            document.getElementById('student-college-location').textContent = college.location;
+            document.getElementById('student-name').textContent = studentName;
+            document.getElementById('student-id').textContent = `${studentId} • Computer Science`;
+            document.getElementById('student-avatar').textContent = studentName.charAt(0);
+        }
+
+        function updateFacultyInfo(institutionCode, facultyId) {
+            const colleges = {
+                'BITS001': { name: 'BITS Pilani', location: 'Pilani, Rajasthan' },
+                'IIT-D': { name: 'IIT Delhi', location: 'New Delhi' },
+                'IISC': { name: 'Indian Institute of Science', location: 'Bangalore, Karnataka' },
+                'NIT-K': { name: 'NIT Kurukshetra', location: 'Kurukshetra, Haryana' },
+                'VIT': { name: 'Vellore Institute of Technology', location: 'Vellore, Tamil Nadu' }
+            };
+
+            const faculty = {
+                'FAC001': { name: 'Dr. Rajesh Kumar', dept: 'Computer Science Department' },
+                'FAC002': { name: 'Prof. Sarah Johnson', dept: 'Computer Science Department' },
+                'FAC003': { name: 'Dr. Amit Patel', dept: 'Mathematics Department' },
+                'FAC004': { name: 'Prof. Maya Singh', dept: 'Electronics Department' },
+                'FAC005': { name: 'Dr. Arjun Mehta', dept: 'Computer Science Department' }
+            };
+
+            const college = colleges[institutionCode.toUpperCase()] || { name: 'Sample University', location: 'Location' };
+            const facultyInfo = faculty[facultyId.toUpperCase()] || { name: 'Faculty Name', dept: 'Department' };
+
+            document.getElementById('faculty-college-name').textContent = college.name;
+            document.getElementById('faculty-college-location').textContent = college.location;
+            document.getElementById('faculty-name').textContent = facultyInfo.name;
+            document.getElementById('faculty-dept').textContent = facultyInfo.dept;
+            document.getElementById('faculty-avatar').textContent = facultyInfo.name.charAt(3);
+        }
+
+        function switchTab(event, tabName, userType) {
+            document.querySelectorAll(`.tab-content`).forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            const currentDashboard = userType === 'student' ? 'student-dashboard' : 'faculty-dashboard';
+            document.querySelectorAll(`#${currentDashboard} .tab-btn`).forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(`${userType}-${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function updateCurrentClass() {
+            const now = new Date();
+            const day = now.getDay();
+            const hour = now.getHours();
+
+            let currentClass = {
+                subject: 'No Class',
+                time: 'Free Period',
+                room: '-',
+                faculty: '-'
+            };
+
+            if (day >= 1 && day <= 6) { // Monday to Saturday
+                if (hour >= 9 && hour < 10) {
+                    currentClass = {
+                        subject: 'Data Structures',
+                        time: '9:00 AM - 10:00 AM',
+                        room: 'Room 101',
+                        faculty: 'Dr. Rajesh Kumar'
+                    };
+                } else if (hour >= 10 && hour < 11) {
+                    currentClass = {
+                        subject: 'Web Development',
+                        time: '10:00 AM - 11:00 AM',
+                        room: 'Room 105',
+                        faculty: 'Prof. Sarah Johnson'
+                    };
+                } else if (hour >= 11 && hour < 12) {
+                    currentClass = {
+                        subject: 'Discrete Mathematics',
+                        time: '11:00 AM - 12:00 PM',
+                        room: 'Room 201',
+                        faculty: 'Dr. Amit Patel'
+                    };
+                } else if (hour >= 12 && hour < 13) {
+                    currentClass = {
+                        subject: 'LUNCH BREAK',
+                        time: '12:00 PM - 1:00 PM',
+                        room: 'Cafeteria',
+                        faculty: 'N/A'
+                    };
+                } else if (hour >= 13 && hour < 14) {
+                    currentClass = {
+                        subject: 'ML Fundamentals',
+                        time: '1:00 PM - 2:00 PM',
+                        room: 'Room 104',
+                        faculty: 'Prof. Maya Singh'
+                    };
+                } else if (hour >= 14 && hour < 15) {
+                    currentClass = {
+                        subject: 'Software Engineering',
+                        time: '2:00 PM - 3:00 PM',
+                        room: 'Room 101',
+                        faculty: 'Dr. Rajesh Kumar'
+                    };
+                }
+            }
+
+            document.getElementById('current-subject').textContent = currentClass.subject;
+            document.getElementById('current-time').textContent = currentClass.time;
+            document.getElementById('current-room').textContent = currentClass.room;
+            document.getElementById('current-faculty').textContent = currentClass.faculty;
+        }
+
+        function updateFacultyCurrentClass() {
+            const now = new Date();
+            const day = now.getDay();
+            const hour = now.getHours();
+            
+            let currentClass = {
+                subject: 'No Class',
+                time: 'Free Period',
+                room: '-',
+                students: '0 enrolled'
+            };
+
+            if (day >= 1 && day <= 6) { // Monday to Saturday
+                if (hour >= 9 && hour < 10) {
+                    currentClass = {
+                        subject: 'Data Structures',
+                        time: '9:00 AM - 10:00 AM',
+                        room: 'Room 101',
+                        students: '45 enrolled'
+                    };
+                } else if (hour >= 10 && hour < 11) {
+                    currentClass = {
+                        subject: 'DS Lab Session',
+                        time: '10:00 AM - 11:00 AM',
+                        room: 'Lab 1',
+                        students: '20 enrolled'
+                    };
+                } else if (hour >= 11 && hour < 12) {
+                    currentClass = {
+                        subject: 'Advanced Algorithms',
+                        time: '11:00 AM - 12:00 PM',
+                        room: 'Room 104',
+                        students: '28 enrolled'
+                    };
+                } else if (hour >= 12 && hour < 13) {
+                    currentClass = {
+                        subject: 'LUNCH BREAK',
+                        time: '12:00 PM - 1:00 PM',
+                        room: 'Cafeteria',
+                        students: 'N/A'
+                    };
+                } else if (hour >= 13 && hour < 14) {
+                    currentClass = {
+                        subject: 'Advanced Algorithms',
+                        time: '1:00 PM - 2:00 PM',
+                        room: 'Room 104',
+                        students: '28 enrolled'
+                    };
+                } else if (hour >= 14 && hour < 15) {
+                    currentClass = {
+                        subject: 'Software Engineering',
+                        time: '2:00 PM - 3:00 PM',
+                        room: 'Room 101',
+                        students: '42 enrolled'
+                    };
+                }
+            }
+            
+            document.getElementById('faculty-current-subject').textContent = currentClass.subject;
+            document.getElementById('faculty-current-time').textContent = currentClass.time;
+            document.getElementById('faculty-current-room').textContent = currentClass.room;
+            document.getElementById('faculty-current-students').textContent = currentClass.students;
+        }
+
+        function filterStudentAttendance() {
+            const selectedSubject = document.getElementById('student-subject-filter').value;
+            console.log('Filtering student attendance for:', selectedSubject);
+            
+            const attendanceData = {
+                'all': { overall: '94%', present: '28', absent: '2' },
+                'cs-301': { overall: '96%', present: '24', absent: '1' },
+                'cs-302': { overall: '92%', present: '23', absent: '2' },
+                'cs-303': { overall: '85%', present: '17', absent: '3' },
+                'cs-304': { overall: '98%', present: '25', absent: '0' },
+                'ma-201': { overall: '78%', present: '15', absent: '4' }
+            };
+
+            const data = attendanceData[selectedSubject] || attendanceData['all'];
+            document.getElementById('student-overall').textContent = data.overall;
+            document.getElementById('student-present').textContent = data.present;
+            document.getElementById('student-absent').textContent = data.absent;
+            
+            const overallCard = document.getElementById('student-overall');
+            overallCard.classList.remove('good', 'warning', 'danger');
+            const overallPercentage = parseInt(data.overall.slice(0, -1));
+            if (overallPercentage >= 90) {
+                overallCard.classList.add('good');
+            } else if (overallPercentage >= 75) {
+                overallCard.classList.add('warning');
+            } else {
+                overallCard.classList.add('danger');
+            }
+        }
+
+        function filterFacultyAttendance() {
+            const selectedClass = document.getElementById('faculty-class-filter').value;
+            const selectedDate = document.getElementById('faculty-date-filter').value;
+            console.log('Filtering faculty attendance for:', selectedClass, 'on date:', selectedDate);
+            
+            const classStats = {
+                'cs-301': { total: 45, present: 42, absent: 3, rate: 93 },
+                'cs-303': { total: 38, present: 35, absent: 3, rate: 92 },
+                'cs-304': { total: 42, present: 40, absent: 2, rate: 95 }
+            };
+            
+            const stats = classStats[selectedClass] || classStats['cs-301'];
+            document.getElementById('faculty-total-students').textContent = stats.total;
+            document.getElementById('faculty-present-today').textContent = stats.present;
+            document.getElementById('faculty-absent-today').textContent = stats.absent;
+            document.getElementById('faculty-attendance-rate').textContent = Math.round((stats.present / stats.total) * 100) + '%';
+        }
+
+        function markAttendance(studentId, status) {
+            const table = document.getElementById('attendance-table');
+            const rows = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < rows.length; i++) {
+                if (rows[i].cells[0].textContent === studentId) {
+                    const statusCell = rows[i].cells[2];
+                    const badge = statusCell.querySelector('.badge');
+                    
+                    badge.classList.remove('present', 'absent', 'late');
+                    badge.classList.add(status);
+                    badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                    
+                    break;
+                }
+            }
+            
+            updateAttendanceStats();
+            console.log(`Marked ${studentId} as ${status}`);
+        }
+
+        function updateAttendanceStats() {
+            const table = document.getElementById('attendance-table');
+            const rows = table.getElementsByTagName('tr');
+            let present = 0, absent = 0, total = 0;
+            
+            for (let i = 1; i < rows.length; i++) {
+                const badge = rows[i].cells[2].querySelector('.badge');
+                if (badge.classList.contains('present') || badge.classList.contains('late')) {
+                    present++;
+                } else {
+                    absent++;
+                }
+                total++;
+            }
+            
+            document.getElementById('faculty-present-today').textContent = present;
+            document.getElementById('faculty-absent-today').textContent = absent;
+            document.getElementById('faculty-attendance-rate').textContent = Math.round((present / total) * 100) + '%';
+        }
+
+        function saveAttendance() {
+            alert('Attendance saved successfully! 📝\nAll attendance records have been updated in the system.');
+        }
+
+        function generateReport() {
+            const selectedClass = document.getElementById('faculty-class-filter').value;
+            alert(`📊 Generating attendance report for ${selectedClass.toUpperCase()}...\n\nReport will be sent to your email within 5 minutes.`);
+        }
+
+        function handleBooking(event) {
+            event.preventDefault();
+            const date = document.getElementById('booking-date').value;
+            const startTime = document.getElementById('booking-start-time').value;
+            const endTime = document.getElementById('booking-end-time').value;
+            const roomType = document.getElementById('room-type').value;
+
+            if (date && startTime && endTime && roomType) {
+                alert(`✅ Booking submitted successfully!\n\nDetails:\nDate: ${date}\nTime: ${startTime} - ${endTime}\nRoom Type: ${roomType}\n\nWe will notify you once the booking is confirmed.`);
+            } else {
+                alert('Please fill out all the booking details.');
+            }
+        }
+
+        function logout() {
+            document.getElementById('signin-page').style.display = 'flex';
+            document.getElementById('student-dashboard').style.display = 'none';
+            document.getElementById('faculty-dashboard').style.display = 'none';
+            document.getElementById('forgot-password-page').style.display = 'none';
+            document.getElementById('registration-page').style.display = 'none';
+            
+            document.getElementById('institution').value = '';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+    </script>
+</body>
+</html>
+SIH.HTML
+Displaying SIH.HTML.
